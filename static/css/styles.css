@@ -3,17 +3,10 @@
     --bg-color-light: #f0f0f5;
     --text-color-light: #333;
     --accent-color-light: #ff0080;
-    --button-hover-color-light: #e50072; /* Light theme hover color */
-    
+
     --bg-color-dark: #121212;
     --text-color-dark: #e0e0e0;
     --accent-color-dark: #6200ea;
-    --button-hover-color-dark: #9c00d2; /* Dark theme hover color */
-    
-    --square-1-top: -50px; /* Off-screen for light theme */
-    --square-1-left: -50px; /* Off-screen for light theme */
-    --square-2-bottom: -100px; /* Off-screen for light theme */
-    --square-2-right: -100px; /* Off-screen for light theme */
 
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -27,7 +20,7 @@ body {
     flex-direction: column;
     align-items: center;
     overflow-x: hidden;
-    position: relative; /* Ensures absolute elements like squares are positioned relative to the body */
+    position: relative;
     transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
 }
 
@@ -44,49 +37,22 @@ body.dark {
 }
 
 /* Background squares */
-body::before, body::after {
-    content: "";
+.square {
     position: absolute;
-    width: 200px;
-    height: 200px;
+    border-radius: 10%;
+    opacity: 0.1;
+    z-index: -1;
+    transition: all 0.4s var(--ease);
+}
+
+body.light .square {
     background-color: rgba(255, 0, 128, 0.1);
-    opacity: 0; /* Hide initially for smoother transition */
-    transition: transform 0.4s var(--ease), background-color 0.4s var(--ease), opacity 0.4s var(--ease);
 }
 
-/* Light theme - visible squares */
-body.light::before {
-    opacity: 1; /* Show square in light theme */
-    top: var(--square-1-top);
-    left: var(--square-1-left);
-    transform: rotate(15deg);
-}
-
-body.light::after {
-    opacity: 1; /* Show square in light theme */
-    bottom: var(--square-2-bottom);
-    right: var(--square-2-right);
-    transform: rotate(-20deg);
-}
-
-/* Dark theme - visible squares */
-body.dark::before {
-    opacity: 1; /* Show square in dark theme */
+body.dark .square {
     background-color: rgba(98, 0, 234, 0.15);
-    top: var(--square-1-top);
-    left: var(--square-1-left);
-    transform: rotate(-10deg);
 }
 
-body.dark::after {
-    opacity: 1; /* Show square in dark theme */
-    background-color: rgba(98, 0, 234, 0.15);
-    bottom: var(--square-2-bottom);
-    right: var(--square-2-right);
-    transform: rotate(30deg);
-}
-
-/* Header and theme toggle */
 header {
     text-align: center;
     position: relative;
@@ -94,7 +60,6 @@ header {
     padding: 20px 0;
 }
 
-/* Theme toggle switch styles */
 .switch {
     position: absolute;
     top: 10px;
@@ -126,7 +91,6 @@ body.dark .switch .slider {
     transform: translateX(25px);
 }
 
-/* Main content styling */
 main {
     width: 90%;
     max-width: 800px;
@@ -134,7 +98,6 @@ main {
     margin-top: 20px;
 }
 
-/* Dropzone styling */
 #dropzone {
     border: 2px dashed var(--accent-color-light);
     border-radius: 10px;
@@ -147,14 +110,6 @@ main {
 body.dark #dropzone {
     border-color: var(--accent-color-dark);
     color: var(--text-color-dark);
-}
-
-/* Input container */
-#input-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    width: 100%;
 }
 
 #url-input {
@@ -178,12 +133,6 @@ body.dark #url-input {
     color: var(--text-color-dark);
 }
 
-body.dark #url-input:focus {
-    border-color: var(--accent-color-dark);
-    box-shadow: 0 0 10px rgba(98, 0, 234, 0.5);
-}
-
-/* "Fetch Streams" button */
 button {
     background-color: var(--accent-color-light);
     color: white;
@@ -197,7 +146,7 @@ button {
 }
 
 button:hover {
-    background-color: var(--button-hover-color-light); /* Hover color for light mode */
+    background-color: rgba(255, 0, 128, 0.7);
 }
 
 body.dark button {
@@ -205,10 +154,9 @@ body.dark button {
 }
 
 body.dark button:hover {
-    background-color: var(--button-hover-color-dark); /* Hover color for dark mode */
+    background-color: rgba(98, 0, 234, 0.7);
 }
 
-/* Loading overlay */
 #loading-overlay {
     position: fixed;
     top: 0;
