@@ -1,93 +1,69 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
-from pytube import YouTube
-from pytube.exceptions import VideoUnavailable
+from flask import Flask, request, jsonify, send_file
+from pytube import YouTube  # YouTube class needs to be imported
+from downloader import Downloader
 import os
-import threading
-import tempfile
-import shutil
 
+# Initialize Flask app
 app = Flask(__name__)
 
-# Directory to store downloaded videos
-DOWNLOAD_FOLDER = "downloads"
+# Folder to save downloaded videos
+DOWNLOAD_FOLDER = 'downloads'
+
+# Ensure that the download folder exists
 if not os.path.exists(DOWNLOAD_FOLDER):
     os.makedirs(DOWNLOAD_FOLDER)
 
-def download_video(url, itag, temp_dir):
-    try:
-        yt = YouTube(url)
-        stream = yt.streams.get_by_itag(itag)
-        if stream:
-            stream.download(output_path=temp_dir)
-            return os.path.join(temp_dir, stream.default_filename)
-        else:
-            return None
-    except VideoUnavailable:
-        return None
-
-def download_audio(url, itag, temp_dir):
-    try:
-        yt = YouTube(url)
-        stream = yt.streams.get_by_itag(itag)
-        if stream:
-            stream.download(output_path=temp_dir)
-            return os.path.join(temp_dir, stream.default_filename)
-        else:
-            return None
-    except VideoUnavailable:
-        return None
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/streams', methods=['POST'])
+@app.route('/api/fetchStreams', methods=['GET'])
 def fetch_streams():
-    data = request.get_json()
-    url = data.get("url")
+    url = request.args.get('url')
+    if not url:
+        return jsonify({'error': 'URL is required'}), 400
+    
     try:
+        # Using PyTube to get available streams for the video
         yt = YouTube(url)
-        title = yt.title
-        thumbnail_url = yt.thumbnail_url
+        streams = yt.streams.filter(progressive=True, file_extension='mp4').all()
+        
+        stream_data = [{
+            'itag': stream.itag,
+            'resolution': stream.resolution,
+            'fps': stream.fps if stream.fps else 'N/A',
+            'mime_type': stream.mime_type
+        } for stream in streams]
+        
+        return jsonify({'streams': stream_data})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-        video_streams = [
-            {"itag": stream.itag, "resolution": stream.resolution, "fps": stream.fps}
-            for stream in yt.streams.filter(progressive=True, file_extension="mp4")
-        ]
-        audio_streams = [
-            {"itag": stream.itag, "abr": stream.abr}
-            for stream in yt.streams.filter(only_audio=True)
-        ]
-        return jsonify({
-            "status": "success",
-            "title": title,
-            "thumbnail_url": thumbnail_url,
-            "video_streams": video_streams,
-            "audio_streams": audio_streams
-        })
-    except VideoUnavailable:
-        return jsonify({"status": "error", "message": "Video is unavailable."})
 
-@app.route('/download', methods=['POST'])
-def download():
-    data = request.get_json()
-    url = data.get("url")
-    itag = data.get("itag")
+@app.route('/api/download', methods=['GET'])
+def download_stream():
+    itag = request.args.get('itag')
+    url = request.args.get('url')
+    if not itag or not url:
+        return jsonify({'error': 'itag and url are required'}), 400
+    
+    try:
+        # Create a Downloader instance
+        downloader = Downloader(url, itag)
+        downloader.start_download_thread()  # Start download in a separate thread
+        
+        # Wait for the download to finish
+        downloader.wait_for_download()
 
-    # Temporary directory for downloads
-    temp_dir = tempfile.mkdtemp()
+        # File path for the downloaded video
+        downloaded_file = os.path.join(DOWNLOAD_FOLDER, f"{itag}.mp4")
+        
+        # Check if the downloaded file exists
+        if os.path.exists(downloaded_file):
+            return send_file(downloaded_file, as_attachment=True)
+        else:
+            return jsonify({'error': 'Download failed, file not found.'}), 500
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    # Choose whether to download audio or video
-    stream_thread = None
-    if itag:
-        stream_thread = threading.Thread(target=download_video, args=(url, itag, temp_dir))
-        stream_thread.start()
-
-    return jsonify({"status": "success", "message": "Download started."})
-
-@app.route('/file/<filename>')
-def send_file(filename):
-    return send_from_directory(DOWNLOAD_FOLDER, filename)
 
 if __name__ == '__main__':
-    app.run(debug=True, threaded=True)
+    app.run(debug=True)

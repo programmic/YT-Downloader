@@ -1,9 +1,7 @@
+# manager.py
+
 from app import app
 
-print("\033c", end="")
-
-if __name__ == "__main__":
-    """
-    Entry point to start the Flask application.
-    """
+if __name__ == '__main__':
+    # Run the Flask app
     app.run(debug=True)

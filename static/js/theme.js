@@ -1,78 +1,55 @@
-document.getElementById('theme-toggle').addEventListener('click', function () {
-    document.body.classList.toggle('dark');
-    updateSquaresPosition();
-});
-
-function updateSquaresPosition() {
-    const squares = document.querySelectorAll('body::before, body::after');
-
-    if (document.body.classList.contains('dark')) {
-        // Move squares for dark theme
-        document.body.style.setProperty('--square-1-top', '100px');
-        document.body.style.setProperty('--square-1-left', '30px');
-        document.body.style.setProperty('--square-2-bottom', '50px');
-        document.body.style.setProperty('--square-2-right', '80px');
-    } else {
-        // Reset positions for light theme
-        document.body.style.setProperty('--square-1-top', '-50px');
-        document.body.style.setProperty('--square-1-left', '-50px');
-        document.body.style.setProperty('--square-2-bottom', '-100px');
-        document.body.style.setProperty('--square-2-right', '-100px');
-    }
-}
-
-async function handleDrop(event) {
-    event.preventDefault();
-    const url = event.dataTransfer.getData("text/plain");
-    if (url) {
-        await fetchStreams(url);
-    }
-}
-
-async function fetchStreams(url) {
+// Fetch streams from Flask backend
+async function fetchStreams() {
     try {
-        const response = await fetch("/streams", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url }),
-        });
-
-        const result = await response.json();
-        if (result.status === "success") {
-            document.getElementById("preview-title").innerText = result.title;
-            document.getElementById("preview-thumbnail").src = result.thumbnail_url;
-
-            const videoSelect = document.getElementById("stream-select");
-            videoSelect.innerHTML = "";
-            result.video_streams.forEach(stream => {
-                const option = document.createElement("option");
-                option.value = stream.itag;
-                option.innerText = `${stream.resolution} @ ${stream.fps} FPS`;
-                videoSelect.appendChild(option);
-            });
-
-            // Enable the Download button after fetching streams
-            document.getElementById('download-button').disabled = false;
+        document.getElementById('loading-overlay').classList.add('active');
+        const url = document.getElementById('url-input').value;
+        if (!url.match(/youtube\.com|youtu\.be/)) {
+            alert('Please enter a valid YouTube link');
+            document.getElementById('loading-overlay').classList.remove('active');
+            return;
         }
+
+        // Call Flask backend to get streams
+        const response = await fetch(`/api/fetchStreams?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+            document.getElementById('loading-overlay').classList.remove('active');
+            return;
+        }
+
+        populateStreamOptions(data);
+        document.getElementById('loading-overlay').classList.remove('active');
     } catch (error) {
         console.error("Error fetching streams:", error);
+        document.getElementById('loading-overlay').classList.remove('active');
     }
 }
 
-document.getElementById('download-button').addEventListener('click', async function () {
-    const selectedItag = document.getElementById('stream-select').value;
-    if (selectedItag) {
-        const url = `https://example.com/download?itag=${selectedItag}`;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'video.mp4'; // Default file name
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
-});
+// Populate stream options in the dropdown
+function populateStreamOptions(data) {
+    const streamSelect = document.getElementById('stream-select');
+    streamSelect.innerHTML = '';
+    data.streams.forEach(stream => {
+        const option = document.createElement('option');
+        option.value = stream.itag;
+        option.textContent = `${stream.resolution} - ${stream.fps}`;
+        streamSelect.appendChild(option);
+    });
+    streamSelect.style.display = 'block';
+    document.getElementById('download-button').disabled = false;
+}
 
-document.getElementById('dropzone').addEventListener('drop', handleDrop);
-document.getElementById('dropzone').addEventListener('dragover', function (event) {
-    event.preventDefault();
+// Download stream when the user selects an option
+document.getElementById('download-button').addEventListener('click', function () {
+    const selectedItag = document.getElementById('stream-select').value;
+    const url = document.getElementById('url-input').value;
+
+    if (selectedItag) {
+        const downloadUrl = `/api/download?itag=${encodeURIComponent(selectedItag)}&url=${encodeURIComponent(url)}`;
+        
+        // Redirect to download URL (will start the file download)
+        window.location.href = downloadUrl;
+    }
 });
