@@ -1,0 +1,229 @@
+/* Root variables for light and dark theme colors */
+:root {
+    --bg-color-light: #f0f0f5;
+    --text-color-light: #333;
+    --accent-color-light: #ff0080;
+    --button-hover-color-light: #e50072; /* Light theme hover color */
+    
+    --bg-color-dark: #121212;
+    --text-color-dark: #e0e0e0;
+    --accent-color-dark: #6200ea;
+    --button-hover-color-dark: #9c00d2; /* Dark theme hover color */
+    
+    --square-1-top: -50px; /* Off-screen for light theme */
+    --square-1-left: -50px; /* Off-screen for light theme */
+    --square-2-bottom: -100px; /* Off-screen for light theme */
+    --square-2-right: -100px; /* Off-screen for light theme */
+
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base body styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative; /* Ensures absolute elements like squares are positioned relative to the body */
+    transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
+}
+
+/* Light theme */
+body.light {
+    background-color: var(--bg-color-light);
+    color: var(--text-color-light);
+}
+
+/* Dark theme */
+body.dark {
+    background-color: var(--bg-color-dark);
+    color: var(--text-color-dark);
+}
+
+/* Background squares */
+body::before, body::after {
+    content: "";
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background-color: rgba(255, 0, 128, 0.1);
+    opacity: 0; /* Hide initially for smoother transition */
+    transition: transform 0.4s var(--ease), background-color 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+
+/* Light theme - visible squares */
+body.light::before {
+    opacity: 1; /* Show square in light theme */
+    top: var(--square-1-top);
+    left: var(--square-1-left);
+    transform: rotate(15deg);
+}
+
+body.light::after {
+    opacity: 1; /* Show square in light theme */
+    bottom: var(--square-2-bottom);
+    right: var(--square-2-right);
+    transform: rotate(-20deg);
+}
+
+/* Dark theme - visible squares */
+body.dark::before {
+    opacity: 1; /* Show square in dark theme */
+    background-color: rgba(98, 0, 234, 0.15);
+    top: var(--square-1-top);
+    left: var(--square-1-left);
+    transform: rotate(-10deg);
+}
+
+body.dark::after {
+    opacity: 1; /* Show square in dark theme */
+    background-color: rgba(98, 0, 234, 0.15);
+    bottom: var(--square-2-bottom);
+    right: var(--square-2-right);
+    transform: rotate(30deg);
+}
+
+/* Header and theme toggle */
+header {
+    text-align: center;
+    position: relative;
+    width: 100%;
+    padding: 20px 0;
+}
+
+/* Theme toggle switch styles */
+.switch {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    width: 50px;
+    height: 25px;
+    background-color: var(--accent-color-light);
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.4s var(--ease);
+}
+
+.switch .slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 21px;
+    height: 21px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.4s var(--ease);
+}
+
+body.dark .switch {
+    background-color: var(--accent-color-dark);
+}
+
+body.dark .switch .slider {
+    transform: translateX(25px);
+}
+
+/* Main content styling */
+main {
+    width: 90%;
+    max-width: 800px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Dropzone styling */
+#dropzone {
+    border: 2px dashed var(--accent-color-light);
+    border-radius: 10px;
+    padding: 20px;
+    color: var(--text-color-light);
+    margin: 20px 0;
+    transition: border-color 0.4s var(--ease);
+}
+
+body.dark #dropzone {
+    border-color: var(--accent-color-dark);
+    color: var(--text-color-dark);
+}
+
+/* Input container */
+#input-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    width: 100%;
+}
+
+#url-input {
+    width: 80%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid var(--accent-color-light);
+    font-size: 1rem;
+    margin-right: 10px;
+    transition: border-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+#url-input:focus {
+    border-color: var(--accent-color-light);
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.5);
+}
+
+body.dark #url-input {
+    border-color: var(--accent-color-dark);
+    background-color: #2a2a2a;
+    color: var(--text-color-dark);
+}
+
+body.dark #url-input:focus {
+    border-color: var(--accent-color-dark);
+    box-shadow: 0 0 10px rgba(98, 0, 234, 0.5);
+}
+
+/* "Fetch Streams" button */
+button {
+    background-color: var(--accent-color-light);
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: background-color 0.4s var(--ease);
+}
+
+button:hover {
+    background-color: var(--button-hover-color-light); /* Hover color for light mode */
+}
+
+body.dark button {
+    background-color: var(--accent-color-dark);
+}
+
+body.dark button:hover {
+    background-color: var(--button-hover-color-dark); /* Hover color for dark mode */
+}
+
+/* Loading overlay */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    display: none;
+}
+
+#loading-overlay.active {
+    display: flex;
+}
