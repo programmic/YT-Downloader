@@ -1,1 +1,7 @@
 /.venv
+/__pycache__/
+/downloads
+*.pyc          # Ignore all .pyc files
+*.pyo          # Ignore all .pyo files (optimized bytecode)
+*.log          # Ignore log files
+*.env          # Ignore environment configuration files
